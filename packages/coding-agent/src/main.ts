@@ -530,8 +530,20 @@ export async function main(args: string[]) {
 		return;
 	}
 
+	// Handle client mode early (before session creation)
+	if (parsed.mode === "client") {
+		const serverUrl = parsed.server ?? "ws://localhost:9000";
+		const { runClientMode } = await import("./modes/client/client-mode.js");
+		await runClientMode({
+			serverUrl,
+			initialMessage: parsed.messages[0],
+			initialMessages: parsed.messages.slice(1),
+		});
+		return;
+	}
+
 	// Read piped stdin content (if any) - skip for RPC mode which uses stdin for JSON-RPC
-	if (parsed.mode !== "rpc") {
+	if (parsed.mode !== "rpc" && parsed.mode !== "server") {
 		const stdinContent = await readPipedStdin();
 		if (stdinContent !== undefined) {
 			// Force print mode since interactive mode requires a TTY for keyboard input
@@ -632,7 +644,10 @@ export async function main(args: string[]) {
 		}
 	}
 
-	if (mode === "rpc") {
+	if (mode === "server") {
+		const { runServerMode } = await import("./modes/server/server-mode.js");
+		await runServerMode(session, { port: parsed.port ?? 9000 });
+	} else if (mode === "rpc") {
 		await runRpcMode(session);
 	} else if (isInteractive) {
 		if (scopedModels.length > 0 && (parsed.verbose || !settingsManager.getQuietStartup())) {

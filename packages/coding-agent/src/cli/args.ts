@@ -7,7 +7,7 @@ import chalk from "chalk";
 import { APP_NAME, CONFIG_DIR_NAME, ENV_AGENT_DIR } from "../config.js";
 import { allTools, type ToolName } from "../core/tools/index.js";
 
-export type Mode = "text" | "json" | "rpc";
+export type Mode = "text" | "json" | "rpc" | "server" | "client";
 
 export interface Args {
 	provider?: string;
@@ -21,6 +21,10 @@ export interface Args {
 	help?: boolean;
 	version?: boolean;
 	mode?: Mode;
+	/** Server port for server mode */
+	port?: number;
+	/** Server URL for client mode */
+	server?: string;
 	noSession?: boolean;
 	session?: string;
 	sessionDir?: string;
@@ -67,9 +71,13 @@ export function parseArgs(args: string[], extensionFlags?: Map<string, { type: "
 			result.version = true;
 		} else if (arg === "--mode" && i + 1 < args.length) {
 			const mode = args[++i];
-			if (mode === "text" || mode === "json" || mode === "rpc") {
+			if (mode === "text" || mode === "json" || mode === "rpc" || mode === "server" || mode === "client") {
 				result.mode = mode;
 			}
+		} else if (arg === "--port" && i + 1 < args.length) {
+			result.port = parseInt(args[++i], 10);
+		} else if (arg === "--server" && i + 1 < args.length) {
+			result.server = args[++i];
 		} else if (arg === "--continue" || arg === "-c") {
 			result.continue = true;
 		} else if (arg === "--resume" || arg === "-r") {
@@ -192,7 +200,9 @@ ${chalk.bold("Options:")}
   --api-key <key>                API key (defaults to env vars)
   --system-prompt <text>         System prompt (default: coding assistant prompt)
   --append-system-prompt <text>  Append text or file contents to the system prompt
-  --mode <mode>                  Output mode: text (default), json, or rpc
+  --mode <mode>                  Output mode: text (default), json, rpc, server, or client
+  --port <port>                  Server port for server mode (default: 9000)
+  --server <url>                 Server URL for client mode (e.g., ws://vm:9000)
   --print, -p                    Non-interactive mode: process prompt and exit
   --continue, -c                 Continue previous session
   --resume, -r                   Select a session to resume
@@ -261,6 +271,12 @@ ${chalk.bold("Examples:")}
   # Export a session file to HTML
   ${APP_NAME} --export ~/${CONFIG_DIR_NAME}/agent/sessions/--path--/session.jsonl
   ${APP_NAME} --export session.jsonl output.html
+
+  # Run as server on remote VM
+  ${APP_NAME} --mode server --port 9000
+
+  # Connect to remote server from local machine
+  ${APP_NAME} --mode client --server ws://vm:9000
 
 ${chalk.bold("Environment Variables:")}
   ANTHROPIC_API_KEY                - Anthropic Claude API key

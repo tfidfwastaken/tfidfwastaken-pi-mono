@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- Client-server architecture for remote VM usage. Run `pi --mode server --port 9000` on remote VM, connect with `pi --mode client --server ws://vm:9000` locally. See [docs/design/client-server-architecture.md](docs/design/client-server-architecture.md).
+
 ## [0.50.1] - 2026-01-26
 
 ### Fixed
